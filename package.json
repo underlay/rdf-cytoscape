@@ -1,0 +1,49 @@
+{
+	"name": "rdf-cytoscape",
+	"description": "React component for rendering RDF graphs and datasets using cytoscape.js",
+	"version": "0.1.0",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"build": "webpack --mode production",
+		"watch": "webpack --mode development --watch"
+	},
+	"dependencies": {
+		"@types/cytoscape": "^3.14.0",
+		"@types/jsonld": "^1.5.1",
+		"@types/n3": "^1.1.5",
+		"@types/react": "^16.9.23",
+		"@types/react-panelgroup": "^1.0.1",
+		"cytoscape": "^3.14.0",
+		"jsonld": "^3.0.1",
+		"n3": "^1.3.5",
+		"react": "^16.13.0",
+		"react-panelgroup": "^1.0.10"
+	},
+	"devDependencies": {
+		"source-map-loader": "^0.2.4",
+		"ts-loader": "^6.2.1",
+		"typescript": "^3.8.3",
+		"webpack": "^4.42.0",
+		"webpack-cli": "^3.3.11"
+	},
+	"main": "lib/index",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/joeltg/rdf-cytoscape.git"
+	},
+	"keywords": [
+		"ipfs",
+		"ipld",
+		"rdf",
+		"json-ld"
+	],
+	"author": {
+		"name": "Joel Gustafson",
+		"email": "joelg@mit.edu"
+	},
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/underlay/rdf-cytoscape/issues"
+	},
+	"homepage": "https://github.com/underlay/rdf-cytoscape#readme"
+}

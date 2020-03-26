@@ -1,6 +1,6 @@
 # rdf-cytoscape
 
-> React component for rendering RDF graphs and datasets using [n3.js](https://github.com/rdfjs/N3.js) and [cytoscape.js](https://github.com/cytoscape/cytoscape.js).
+> React component for rendering RDF graphs and datasets using [n3.js](https://github.com/rdfjs/N3.js) and [cytoscape.js](https://github.com/cytoscape/cytoscape.js)
 
 You can render either RDF Datasets or RDF Graphs. Datasets use [`react-panelgroup`](https://github.com/DanFessler/react-panelgroup) to split up the different graphs. Both elements take an [`N3Store`](http://rdf.js.org/N3.js/docs/N3Store.html) as a required prop; for Graphs you just specify the graph name that you want to element to render.
 

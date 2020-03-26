@@ -5,7 +5,7 @@ import {
 	XSD,
 	RDF,
 	TAB,
-	CHAR,
+	CHAR
 } from "./utils"
 import { Literal } from "n3"
 
@@ -14,7 +14,7 @@ const prefixFills: { [prefix: string]: string } = {
 	rdf: "#005A9C",
 	prov: "green",
 	ipfs: "#6ACAD1",
-	dcterms: "#FF6600",
+	dcterms: "#FF6600"
 }
 
 const valueClasses = {
@@ -23,7 +23,7 @@ const valueClasses = {
 	[XSD.INTEGER]: "n",
 	[XSD.DOUBLE]: "n",
 	[XSD.DATE]: "d",
-	[XSD.DATETIME]: "d",
+	[XSD.DATETIME]: "d"
 }
 
 const STYLE = `<style>
@@ -140,6 +140,7 @@ export default function Node(
 
 	const name = compactStyle(id, compact, false)
 	const type = compactStyle(RDF.TYPE, compact, true)
+	// const type: [string, string] = ["", "a"]
 
 	const rdfTypes =
 		compactRDFTypes.length &&

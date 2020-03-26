@@ -138,7 +138,7 @@ export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
 			focus={focus}
 			graph={graph}
 			store={store}
-			activeCtx={context}
+			context={context}
 			onSelect={handleSelect}
 			onUnselect={handleUnselect}
 			onMouseOver={handleMouseOver}

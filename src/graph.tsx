@@ -1,7 +1,11 @@
 import * as React from "react"
 import cytoscape, { BreadthFirstLayoutOptions } from "cytoscape"
 import { N3Store, Quad, Term, Literal } from "n3"
+import { processContext } from "jsonld"
 import { compactIri } from "jsonld/lib/compact"
+import { getInitialContext } from "jsonld/lib/context"
+
+import localCtx from "./context.json"
 
 import Node from "./node"
 
@@ -13,6 +17,7 @@ import {
 	BreadthFirstLayout,
 	GridLayout,
 	CoseLayout,
+	RandomLayout,
 	DataURIPrefix,
 	SVGPrefix
 } from "./utils"
@@ -20,14 +25,14 @@ import {
 interface GraphProps {
 	store: N3Store
 	graph: string
-	focus: string
-	activeCtx: {}
-	onSelect(focus: string): void
-	onUnselect(focus: string): void
-	onMouseOver(focus: string): void
-	onMouseOut(focus: string): void
-	onMount(cy: cytoscape.Core): void
-	onDestroy(): void
+	focus?: string
+	context?: {}
+	onSelect?(focus: string): void
+	onUnselect?(focus: string): void
+	onMouseOver?(focus: string): void
+	onMouseOut?(focus: string): void
+	onMount?(cy: cytoscape.Core): void
+	onDestroy?(): void
 }
 
 interface Node {
@@ -139,97 +144,108 @@ function attachListeners(
 
 	if (focus === graph) {
 		cy.container().parentElement.classList.add("selected")
-	} else if (focus !== null && focus !== "") {
+	} else if (typeof focus === "string" && focus !== null && focus !== "") {
 		cy.$(`#${encode(focus)}`).select()
 	}
 }
 
 function makeEvents(
-	ref: React.MutableRefObject<cytoscape.Core>,
-	graph: string
+	cy: cytoscape.Core
 ): {
 	[name: string]: (_: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
 } {
-	const directed = graph === ""
 	return {
-		reset: _ => ref.current.fit(),
-		bfs: _ =>
-			ref.current
-				.layout({
-					...BreadthFirstLayout,
-					directed
-				} as BreadthFirstLayoutOptions)
-				.run(),
-		grid: () => ref.current.layout(GridLayout).run(),
-		random: () => ref.current.layout(RandomSource).run(),
-		cose: () => ref.current.layout(CoseLayout).run()
+		reset: _ => cy.fit(),
+		bfs: _ => cy.layout(BreadthFirstLayout).run(),
+		grid: () => cy.layout(GridLayout).run(),
+		random: () => cy.layout(RandomLayout).run(),
+		cose: () => cy.layout(CoseLayout).run()
 	}
 }
 
+const activeCtx = getInitialContext({ base: "" })
+
+async function getCtx(context: {}): Promise<{}> {
+	return context === undefined
+		? processContext(activeCtx, localCtx, {})
+		: processContext(activeCtx, context, {})
+}
+
 export default function(props: GraphProps) {
-	const { store, graph, focus, activeCtx, onMount, onDestroy } = props
+	const { store, graph, focus, context, onMount, onDestroy } = props
+	const [ctx, setCtx] = React.useState(null as {})
+	React.useEffect(() => {
+		getCtx(context)
+			.then(setCtx)
+			.catch(err => console.error(err))
+	}, [context])
+
 	const quads = React.useMemo(() => store.getQuads(null, null, null, graph), [
 		store,
 		graph
 	])
 
-	const elements = React.useMemo(() => makeElements(activeCtx, quads), [
-		activeCtx,
-		quads
-	])
+	const elements = React.useMemo(
+		() => (ctx === null ? null : makeElements(ctx, quads)),
+		[ctx, quads]
+	)
 
-	const ref: React.MutableRefObject<cytoscape.Core> = React.useRef(null)
-	const cy = ref.current
-
-	const events = React.useMemo(() => makeEvents(ref, graph), [graph])
+	const [cy, setCy] = React.useState(null as cytoscape.Core)
 
 	React.useEffect(() => {
-		if (cy !== null) {
-			cy.elements().remove()
-			cy.add(elements)
+		if (elements !== null && cy !== null) {
+			cy.batch(() => {
+				cy.elements().remove()
+				cy.add(elements)
+			})
+
+			cy.layout(BreadthFirstLayout).run()
+
 			attachListeners(cy, props)
 		}
-	}, [store, graph, activeCtx])
+	}, [elements, cy])
 
-	const attachRef = React.useCallback((div: HTMLDivElement) => {
-		if (div === null) {
-			return
-		} else if (ref.current !== null) {
-			return
-		}
+	const attachRef = React.useCallback(
+		(container: HTMLDivElement) => {
+			// Neither of these should really happen?
+			if (container === null) {
+				return
+			} else if (cy !== null) {
+				return
+			}
 
-		const layout = {
-			...BreadthFirstLayout,
-			directed: graph === "",
-			roots: focus === null ? undefined : `#${encode(focus)}`
-		}
+			const nextCy = cytoscape({
+				container,
+				style: Style,
+				minZoom: 0.1,
+				maxZoom: 4,
+				zoom: 1
+			})
 
-		ref.current = cytoscape({
-			container: div,
-			elements,
-			layout,
-			style: Style,
-			minZoom: 0.1,
-			maxZoom: 4,
-			zoom: 1
-		})
+			if (typeof onDestroy === "function") {
+				nextCy.on("destroy", _ => onDestroy())
+			}
 
-		if (typeof onDestroy === "function") {
-			ref.current.on("destroy", _ => onDestroy())
-		}
+			if (typeof onMount === "function") {
+				onMount(nextCy)
+			}
 
-		if (typeof onMount === "function") {
-			onMount(ref.current)
-		}
+			setCy(nextCy)
+		},
+		[focus, graph]
+	)
 
-		attachListeners(ref.current, props)
-	}, [])
+	const events = React.useMemo(() => (cy === null ? {} : makeEvents(cy)), [cy])
+
+	if (ctx === null) {
+		return null
+	}
 
 	const className = graph === "" ? "graph default" : "graph"
 	return (
 		<div className={className}>
 			<div className="control">
-				<span>{graph || null}</span>
+				<span>{graph}</span>
 				<button onClick={events.random}>Random</button>
 				<button onClick={events.grid}>Grid</button>
 				<button onClick={events.bfs}>BFS</button>

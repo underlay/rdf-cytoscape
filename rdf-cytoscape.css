@@ -1,0 +1,67 @@
+.rdf-cytoscape {
+	font-family: Monaco, monospace;
+	background-color: ghostwhite;
+	border: 1px solid black;
+}
+
+.rdf-cytoscape .error {
+	margin: 1em auto;
+	width: max-content;
+}
+
+.rdf-cytoscape .graph {
+	position: relative;
+	height: 100%;
+	width: 100%;
+}
+
+.rdf-cytoscape .graph .control {
+	font-size: 12px;
+	padding: 2px 4px 0 4px;
+	background: floralwhite;
+	border-bottom: 1px solid lightgrey;
+	text-align: right;
+	color: #666;
+}
+
+.rdf-cytoscape .graph.selected .control,
+.rdf-cytoscape .graph.hover .control {
+	padding: 0 2px 0 2px;
+	border: 2px solid #36454f;
+	border-bottom: 1px solid lightgrey;
+}
+
+.rdf-cytoscape .graph .control span {
+	float: left;
+}
+
+.rdf-cytoscape .graph .control button {
+	border: initial;
+	background: initial;
+	font-family: inherit;
+	font-size: inherit;
+	color: inherit;
+	cursor: pointer;
+	padding-bottom: 0;
+}
+
+.rdf-cytoscape .graph .control button:hover {
+	color: #333;
+	text-decoration: underline;
+}
+
+.rdf-cytoscape .graph .control button:active {
+	font-weight: bold;
+}
+
+.rdf-cytoscape .graph .container {
+	position: absolute;
+	top: 20px;
+	bottom: 0;
+	width: 100%;
+}
+
+.rdf-cytoscape .graph.selected,
+.rdf-cytoscape .graph.hover {
+	box-shadow: inset 0px 0px 0px 2px #36454f;
+}

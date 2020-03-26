@@ -56,7 +56,8 @@ export const BreadthFirstLayout: LayoutOptions = {
 	...BaseLayoutOptions,
 	name: "breadthfirst",
 	spacingFactor: 1,
-	circle: false
+	circle: false,
+	directed: true
 }
 
 export const RandomLayout: LayoutOptions = {

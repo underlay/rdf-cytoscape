@@ -9,3 +9,7 @@ declare module "jsonld/lib/compact" {
 declare module "jsonld/lib/context" {
 	function getInitialContext(options: { base: string }): {}
 }
+
+declare module "jsonld" {
+	function processContext(activeCtx: {}, localCtx: {}, options: {}): Promise<{}>
+}

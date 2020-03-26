@@ -5,10 +5,6 @@ import PanelGroup, { PanelWidth } from "react-panelgroup"
 import GraphView from "./graph"
 import { encode, BorderColor, PanelWidths, decode } from "./utils"
 
-const GraphNameError = new Error(
-	"Invalid message: only named graphs with blank graph names are allowed."
-)
-
 export const Graph = GraphView
 
 interface DatasetProps {
@@ -19,9 +15,7 @@ interface DatasetProps {
 }
 
 export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
-	const {
-		current: cys
-	}: React.MutableRefObject<Map<string, cytoscape.Core>> = React.useRef(
+	const cys: React.MutableRefObject<Map<string, cytoscape.Core>> = React.useRef(
 		new Map()
 	)
 
@@ -30,8 +24,6 @@ export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
 		const forGraphs = ({ termType, id }: Term) => {
 			if (termType === "BlankNode") {
 				graphs.push(id)
-			} else if (termType !== "DefaultGraph") {
-				throw GraphNameError
 			}
 		}
 
@@ -45,19 +37,29 @@ export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
 		focusRef.current = focus
 	}, [focus])
 
-	const handleOuterUpdate = (_: PanelWidth) => {
-		for (const graph of graphs) {
-			cys.get(graph).resize()
-		}
-	}
+	const handleInnerUpdate = React.useCallback(
+		(_: PanelWidth) => {
+			for (const graph of graphs) {
+				if (cys.current.has(graph)) {
+					cys.current.get(graph).resize()
+				}
+			}
+		},
+		[graphs]
+	)
 
-	const handleInnerUpdate = (data: PanelWidth) => {
-		handleInnerUpdate(data)
-		cys.get("").resize()
-	}
+	const handleOuterUpdate = React.useCallback(
+		(data: PanelWidth) => {
+			handleInnerUpdate(data)
+			if (cys.current.has("")) {
+				cys.current.get("").resize()
+			}
+		},
+		[handleInnerUpdate]
+	)
 
 	const handleMouseOver = React.useCallback((id: string) => {
-		for (const [graph, cy] of cys.entries()) {
+		for (const [graph, cy] of cys.current.entries()) {
 			if (id !== "") {
 				cy.$("#" + encode(id)).classes("hover")
 			}
@@ -70,21 +72,23 @@ export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
 
 	const handleMouseOut = React.useCallback((id: string, graph: string) => {
 		if (id === null) {
-			cys
+			const forEach = (ele: cytoscape.SingularElementReturnValue) => {
+				const id = decode(ele.id())
+				if (cys.current.has(id)) {
+					cys.current
+						.get(id)
+						.container()
+						.parentElement.classList.remove("hover")
+				}
+			}
+
+			cys.current
 				.get(graph)
 				.$(".hover")
-				.forEach(ele => {
-					const id = decode(ele.id())
-					if (cys.has(id)) {
-						cys
-							.get(id)
-							.container()
-							.parentElement.classList.remove("hover")
-					}
-				})
+				.forEach(forEach)
 				.classes("")
 		} else {
-			for (const [graph, cy] of cys.entries()) {
+			for (const [graph, cy] of cys.current.entries()) {
 				if (id !== "") {
 					cy.$("#" + encode(id)).classes("")
 				}
@@ -99,7 +103,7 @@ export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
 	const handleSelect = React.useCallback((id: string) => {
 		if (id !== focusRef.current) {
 			const f = encode(id)
-			for (const [graph, cy] of cys.entries()) {
+			for (const [graph, cy] of cys.current.entries()) {
 				if (graph === id) {
 					cy.container().parentElement.classList.add("selected")
 				} else if (id !== "") {
@@ -121,7 +125,7 @@ export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
 
 	const handleUnselect = React.useCallback((id: string) => {
 		if (id === focusRef.current) {
-			for (const [graph, cy] of cys.entries()) {
+			for (const [graph, cy] of cys.current.entries()) {
 				if (id === graph) {
 					cy.container().parentElement.classList.remove("selected")
 				}
@@ -143,10 +147,14 @@ export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
 			onUnselect={handleUnselect}
 			onMouseOver={handleMouseOver}
 			onMouseOut={id => handleMouseOut(id, graph)}
-			onMount={cy => cys.set(graph, cy)}
-			onDestroy={() => cys.delete(graph)}
+			onMount={cy => cys.current.set(graph, cy)}
+			onDestroy={() => cys.current.delete(graph)}
 		/>
 	)
+
+	if (graphs.length === 0) {
+		return renderGraph("")
+	}
 
 	return (
 		<PanelGroup

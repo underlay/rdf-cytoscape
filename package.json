@@ -1,7 +1,7 @@
 {
 	"name": "rdf-cytoscape",
 	"description": "React component for rendering RDF graphs and datasets using cytoscape.js",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
@@ -9,7 +9,7 @@
 		"@types/cytoscape": "^3.14.0",
 		"@types/jsonld": "^1.5.1",
 		"@types/n3": "^1.1.5",
-		"@types/react": "^16.9.25",
+		"@types/react": "^16.9.26",
 		"@types/react-panelgroup": "^1.0.1",
 		"cytoscape": "^3.14.1",
 		"jsonld": "^3.0.1",
@@ -20,7 +20,7 @@
 	"main": "lib/index",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/joeltg/rdf-cytoscape.git"
+		"url": "git+https://github.com/underlay/rdf-cytoscape.git"
 	},
 	"keywords": [
 		"ipfs",

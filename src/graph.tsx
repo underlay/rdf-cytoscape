@@ -1,5 +1,5 @@
 import * as React from "react"
-import cytoscape, { BreadthFirstLayoutOptions } from "cytoscape"
+import cytoscape from "cytoscape"
 import { N3Store, Quad, Term, Literal } from "n3"
 import { processContext } from "jsonld"
 import { compactIri } from "jsonld/lib/compact"

@@ -19,7 +19,7 @@ import {
 	CoseLayout,
 	RandomLayout,
 	DataURIPrefix,
-	SVGPrefix
+	SVGPrefix,
 } from "./utils"
 
 interface GraphProps {
@@ -50,7 +50,14 @@ function createNode(
 		const node: Node = { literals: new Map(), types: [] }
 		if (elements !== null) {
 			node.index = elements.length
-			elements.push({ group: "nodes", data: { id: encode(id) } })
+			const element: cytoscape.ElementDefinition = {
+				group: "nodes",
+				data: { id: encode(id) },
+			}
+			if (id.startsWith("_:")) {
+				element.classes = "blankNode"
+			}
+			elements.push(element)
 		}
 		nodes.set(id, node)
 	}
@@ -66,12 +73,12 @@ function makeElements(
 	const elements: cytoscape.ElementDefinition[] = []
 	const nodes: Map<string, Node> = new Map()
 
-	for (const index of quads.keys()) {
+	for (const [index, quad] of quads.entries()) {
 		const {
 			subject,
 			predicate: { id: iri },
-			object
-		} = quads[index]
+			object,
+		} = quad
 
 		createNode(subject, nodes, elements)
 		if (object.termType === "Literal") {
@@ -92,14 +99,13 @@ function makeElements(
 					iri,
 					name: compact(iri, true),
 					source: encode(subject.id),
-					target: encode(object.id)
-				}
+					target: encode(object.id),
+				},
 			})
 		}
 	}
 
-	for (const id of nodes.keys()) {
-		const { literals, types, index } = nodes.get(id)
+	for (const [id, { literals, types, index }] of nodes.entries()) {
 		const { data } = elements[index]
 		const [svg, width, height] = Node(id, types, literals, compact)
 		data.svg = DataURIPrefix + encodeURIComponent(SVGPrefix + svg)
@@ -111,7 +117,7 @@ function makeElements(
 }
 
 const makeListener = (handler: (target: string) => void) => ({
-	target
+	target,
 }: cytoscape.EventObject) => handler(decode(target.id()))
 
 function attachListeners(
@@ -125,7 +131,7 @@ function attachListeners(
 
 	if (typeof onMouseOut === "function") {
 		n.on("mouseout", makeListener(onMouseOut))
-		cy.on("mouseout", _ => onMouseOut(null))
+		cy.on("mouseout", (_) => onMouseOut(null))
 	}
 
 	if (typeof onSelect === "function") {
@@ -155,11 +161,11 @@ function makeEvents(
 	[name: string]: (_: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
 } {
 	return {
-		reset: _ => cy.fit(),
-		bfs: _ => cy.layout(BreadthFirstLayout).run(),
+		reset: (_) => cy.fit(),
+		bfs: (_) => cy.layout(BreadthFirstLayout).run(),
 		grid: () => cy.layout(GridLayout).run(),
 		random: () => cy.layout(RandomLayout).run(),
-		cose: () => cy.layout(CoseLayout).run()
+		cose: () => cy.layout(CoseLayout).run(),
 	}
 }
 
@@ -171,18 +177,18 @@ async function getCtx(context: {}): Promise<{}> {
 		: processContext(activeCtx, context, {})
 }
 
-export default function(props: GraphProps) {
+export default function (props: GraphProps) {
 	const { store, graph, focus, context, onMount, onDestroy } = props
 	const [ctx, setCtx] = React.useState(null as {})
 	React.useEffect(() => {
 		getCtx(context)
 			.then(setCtx)
-			.catch(err => console.error(err))
+			.catch((err) => console.error(err))
 	}, [context])
 
 	const quads = React.useMemo(() => store.getQuads(null, null, null, graph), [
 		store,
-		graph
+		graph,
 	])
 
 	const elements = React.useMemo(
@@ -219,11 +225,11 @@ export default function(props: GraphProps) {
 				style: Style,
 				minZoom: 0.1,
 				maxZoom: 4,
-				zoom: 1
+				zoom: 1,
 			})
 
 			if (typeof onDestroy === "function") {
-				nextCy.on("destroy", _ => onDestroy())
+				nextCy.on("destroy", (_) => onDestroy())
 			}
 
 			if (typeof onMount === "function") {
@@ -245,7 +251,7 @@ export default function(props: GraphProps) {
 	return (
 		<div className={className}>
 			<div className="control">
-				<span>{graph}</span>
+				{graph.startsWith("_:") ? null : <span>{graph}</span>}
 				<button onClick={events.random}>Random</button>
 				<button onClick={events.grid}>Grid</button>
 				<button onClick={events.bfs}>BFS</button>

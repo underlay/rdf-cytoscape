@@ -5,8 +5,8 @@ export declare const Graph: typeof GraphView;
 interface DatasetProps {
     context: {};
     store: N3Store;
-    focus: string;
-    onFocus(focus: string): void;
+    focus?: string | null;
+    onFocus?(focus: string): void;
 }
 export declare function Dataset({ store, context, focus, onFocus }: DatasetProps): JSX.Element;
 export {};

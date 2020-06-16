@@ -5,7 +5,7 @@ import {
 	XSD,
 	RDF,
 	TAB,
-	CHAR
+	CHAR,
 } from "./utils"
 import { Literal } from "n3"
 
@@ -14,7 +14,7 @@ const prefixFills: { [prefix: string]: string } = {
 	rdf: "#005A9C",
 	prov: "green",
 	ipfs: "#6ACAD1",
-	dcterms: "#FF6600"
+	dcterms: "#FF6600",
 }
 
 const valueClasses = {
@@ -23,7 +23,7 @@ const valueClasses = {
 	[XSD.INTEGER]: "n",
 	[XSD.DOUBLE]: "n",
 	[XSD.DATE]: "d",
-	[XSD.DATETIME]: "d"
+	[XSD.DATETIME]: "d",
 }
 
 const STYLE = `<style>
@@ -38,9 +38,6 @@ text { fill: black }
 .n { fill: #CA7841 }
 .d { fill: #990055 }
 </style>`
-
-// const maxWidth = 96
-// const wrapWidth = 84
 
 const quote = '<tspan class="q">"</tspan>'
 
@@ -126,9 +123,9 @@ export default function Node(
 ) {
 	const literalKeys = Array.from(literals.keys())
 	const literalValues = Array.from(literals.values())
-	const compactKeys = literalKeys.map(key => compactStyle(key, compact, true))
-	const compactRDFTypes = types.map(type => compactStyle(type, compact, true))
-	const compactDataTypes = literalValues.map(value =>
+	const compactKeys = literalKeys.map((key) => compactStyle(key, compact, true))
+	const compactRDFTypes = types.map((type) => compactStyle(type, compact, true))
+	const compactDataTypes = literalValues.map((value) =>
 		value.map((literal: Literal): [string, string] => {
 			if (literal.datatype.id === RDF.LANG_STRING) {
 				return [literal.language, ""]
@@ -138,9 +135,8 @@ export default function Node(
 		})
 	)
 
-	const name = compactStyle(id, compact, false)
+	const name = id.startsWith("_:") ? null : compactStyle(id, compact, false)
 	const type = compactStyle(RDF.TYPE, compact, true)
-	// const type: [string, string] = ["", "a"]
 
 	const rdfTypes =
 		compactRDFTypes.length &&
@@ -157,15 +153,17 @@ export default function Node(
 		literals.size &&
 		Math.max.apply(
 			null,
-			compactDataTypes.map(types => Math.max.apply(null, types.map(getLength)))
+			compactDataTypes.map((types) =>
+				Math.max.apply(null, types.map(getLength))
+			)
 		)
 
 	const dataValues =
 		literals.size &&
 		Math.max.apply(
 			null,
-			literalValues.flatMap(value =>
-				value.map(literal => 1 + literal.value.length + 1)
+			literalValues.flatMap((value) =>
+				value.map((literal) => 1 + literal.value.length + 1)
 			)
 		)
 
@@ -174,20 +172,28 @@ export default function Node(
 		CHAR *
 			Math.max(
 				TAB,
-				getLength(name),
+				name === null ? 0 : getLength(name),
 				properties + TAB + Math.max(rdfTypes, dataTypes + TAB + dataValues)
 			)
 
-	const lines = ["", STYLE, renderTerm(name, 6, 16)]
-	let height = LINE_HEIGHT + 2
+	const lines = ["", STYLE]
+	let height = 2
+	if (name !== null) {
+		lines.push(renderTerm(name, 6, 16))
+		height += LINE_HEIGHT
+	}
+	// let height = LINE_HEIGHT + 2
 
-	if (types.length || literals.size) {
-		lines.push(
-			`<line x1="6" y1="22" x2="${width -
-				6}" y2="22" stroke="lightgrey" stroke-opacity="1"/>`
-		)
-
-		let top = 40
+	if (types.length > 0 || literals.size > 0) {
+		let top = LINE_HEIGHT
+		if (name !== null) {
+			top += LINE_HEIGHT + 4
+			lines.push(
+				`<line x1="6" y1="22" x2="${
+					width - 6
+				}" y2="22" stroke="lightgrey" stroke-opacity="1"/>`
+			)
+		}
 
 		if (types.length) {
 			lines.push(renderTerm(type, 6, top))
@@ -205,8 +211,9 @@ export default function Node(
 				const y = top + compactRDFTypes.length * LINE_HEIGHT - 12
 				top = y + 16
 				lines.push(
-					`<line x1="${propertiesOffset}" y1="${y}" x2="${width -
-						6}" y2="${y}" stroke="lightgrey" stroke-opacity="1"/>`
+					`<line x1="${propertiesOffset}" y1="${y}" x2="${
+						width - 6
+					}" y2="${y}" stroke="lightgrey" stroke-opacity="1"/>`
 				)
 			} else {
 				top += LINE_HEIGHT * types.length

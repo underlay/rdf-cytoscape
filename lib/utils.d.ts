@@ -1,5 +1,3 @@
-/// <reference types="node" />
-import { N3Store, Quad } from "n3";
 import { LayoutOptions, Stylesheet } from "cytoscape";
 import { PanelWidth } from "react-panelgroup";
 export declare const XSD: {
@@ -23,7 +21,6 @@ export declare const encode: (s: string) => string;
 export declare const decode: (s: string) => string;
 export declare const base32: RegExp;
 export declare const fragment: RegExp;
-export declare const parseMessage: (data: Buffer) => Promise<N3Store<import("rdf-js").Quad, Quad>>;
 export declare const DataURIPrefix = "data:image/svg+xml;utf8,";
 export declare const SVGPrefix = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE svg>";
 export declare const BaseLayoutOptions: {

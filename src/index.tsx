@@ -1,5 +1,5 @@
 import * as React from "react"
-import { N3Store, Term } from "n3"
+import { N3Store } from "n3"
 import PanelGroup, { PanelWidth } from "react-panelgroup"
 
 import GraphView from "./graph"
@@ -10,8 +10,8 @@ export const Graph = GraphView
 interface DatasetProps {
 	context: {}
 	store: N3Store
-	focus: string
-	onFocus(focus: string): void
+	focus?: string | null
+	onFocus?(focus: string): void
 }
 
 export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
@@ -21,13 +21,12 @@ export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
 
 	const graphs = React.useMemo(() => {
 		const graphs: string[] = []
-		const forGraphs = ({ termType, id }: Term) => {
+		for (const { termType, id } of store.getGraphs(null, null, null)) {
 			if (termType === "BlankNode") {
 				graphs.push(id)
 			}
 		}
 
-		store.forGraphs(forGraphs, null, null, null)
 		return graphs
 	}, [store])
 
@@ -61,7 +60,7 @@ export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
 	const handleMouseOver = React.useCallback((id: string) => {
 		for (const [graph, cy] of cys.current.entries()) {
 			if (id !== "") {
-				cy.$("#" + encode(id)).classes("hover")
+				cy.$("#" + encode(id)).addClass("hover")
 			}
 
 			if (id === graph) {
@@ -82,15 +81,11 @@ export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
 				}
 			}
 
-			cys.current
-				.get(graph)
-				.$(".hover")
-				.forEach(forEach)
-				.classes("")
+			cys.current.get(graph).$(".hover").forEach(forEach).removeClass("hover")
 		} else {
 			for (const [graph, cy] of cys.current.entries()) {
 				if (id !== "") {
-					cy.$("#" + encode(id)).classes("")
+					cy.$("#" + encode(id)).removeClass("hover")
 				}
 
 				if (id === graph) {
@@ -119,7 +114,11 @@ export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
 				}
 			}
 
-			onFocus(id)
+			if (onFocus !== undefined) {
+				onFocus(id)
+			} else {
+				focusRef.current = id
+			}
 		}
 	}, [])
 
@@ -132,7 +131,11 @@ export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
 				cy.$(`:selected`).unselect()
 			}
 
-			onFocus(null)
+			if (onFocus !== undefined) {
+				onFocus(null)
+			} else {
+				focusRef.current = null
+			}
 		}
 	}, [])
 
@@ -146,8 +149,8 @@ export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
 			onSelect={handleSelect}
 			onUnselect={handleUnselect}
 			onMouseOver={handleMouseOver}
-			onMouseOut={id => handleMouseOut(id, graph)}
-			onMount={cy => cys.current.set(graph, cy)}
+			onMouseOut={(id) => handleMouseOut(id, graph)}
+			onMount={(cy) => cys.current.set(graph, cy)}
 			onDestroy={() => cys.current.delete(graph)}
 		/>
 	)

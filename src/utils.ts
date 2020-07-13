@@ -61,12 +61,17 @@ export const Style: Stylesheet[] = [
 		style: {
 			shape: "rectangle",
 			"background-color": "floralwhite",
-			"background-image": "data(svg)",
 			width: "data(width)",
 			height: "data(height)",
 			"border-width": 1,
 			"border-style": "solid",
 			"border-color": "lightgrey",
+		},
+	},
+	{
+		selector: "node[^empty]",
+		style: {
+			"background-image": "data(svg)",
 		},
 	},
 	{

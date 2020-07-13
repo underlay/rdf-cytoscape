@@ -108,7 +108,6 @@ function makeElements(
 	for (const [id, { literals, types, index }] of nodes.entries()) {
 		const { data } = elements[index]
 		if (id.startsWith("_:") && literals.size === 0 && types.length === 0) {
-			data.svg = DataURIPrefix + encodeURIComponent(SVGPrefix)
 			data.width = 36
 			data.height = 36
 			data.empty = true

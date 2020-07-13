@@ -70,7 +70,11 @@ export const Style: Stylesheet[] = [
 		},
 	},
 	{
-		selector: "node.blankNode",
+		selector: "node.blankNode[?empty]",
+		style: { shape: "ellipse" },
+	},
+	{
+		selector: "node.blankNode[^empty]",
 		style: { shape: "round-rectangle" },
 	},
 	{

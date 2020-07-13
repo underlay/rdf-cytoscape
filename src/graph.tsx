@@ -1,6 +1,6 @@
 import * as React from "react"
 import cytoscape from "cytoscape"
-import { N3Store, Quad, Term, Literal } from "n3"
+import { Store, Quad, Term, Literal } from "n3"
 import { processContext } from "jsonld"
 import { compactIri } from "jsonld/lib/compact"
 import { getInitialContext } from "jsonld/lib/context"
@@ -23,7 +23,7 @@ import {
 } from "./utils"
 
 interface GraphProps {
-	store: N3Store
+	store: Store
 	graph: string
 	focus?: string
 	context?: {}
@@ -107,10 +107,16 @@ function makeElements(
 
 	for (const [id, { literals, types, index }] of nodes.entries()) {
 		const { data } = elements[index]
-		const [svg, width, height] = Node(id, types, literals, compact)
-		data.svg = DataURIPrefix + encodeURIComponent(SVGPrefix + svg)
-		data.width = width
-		data.height = height
+		if (id.startsWith("_:") && literals.size === 0 && types.length === 0) {
+			data.width = 36
+			data.height = 36
+			data.empty = true
+		} else {
+			const [svg, width, height] = Node(id, types, literals, compact)
+			data.svg = DataURIPrefix + encodeURIComponent(SVGPrefix + svg)
+			data.width = width
+			data.height = height
+		}
 	}
 
 	return elements

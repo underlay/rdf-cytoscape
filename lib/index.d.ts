@@ -1,10 +1,10 @@
 /// <reference types="react" />
-import { N3Store } from "n3";
+import { Store } from "n3";
 import GraphView from "./graph";
 export declare const Graph: typeof GraphView;
 interface DatasetProps {
     context: {};
-    store: N3Store;
+    store: Store;
     focus?: string | null;
     onFocus?(focus: string): void;
 }

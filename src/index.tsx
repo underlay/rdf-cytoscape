@@ -1,5 +1,5 @@
 import * as React from "react"
-import { N3Store } from "n3"
+import { Store, DataFactory } from "n3"
 import PanelGroup, { PanelWidth } from "react-panelgroup"
 
 import GraphView from "./graph"
@@ -9,7 +9,7 @@ export const Graph = GraphView
 
 interface DatasetProps {
 	context: {}
-	store: N3Store
+	store: Store
 	focus?: string | null
 	onFocus?(focus: string): void
 }
@@ -17,6 +17,11 @@ interface DatasetProps {
 export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
 	const cys: React.MutableRefObject<Map<string, cytoscape.Core>> = React.useRef(
 		new Map()
+	)
+
+	const defaultGraphSize = React.useMemo(
+		() => store.countQuads(null, null, null, DataFactory.defaultGraph()),
+		[store]
 	)
 
 	const graphs = React.useMemo(() => {
@@ -157,6 +162,19 @@ export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
 
 	if (graphs.length === 0) {
 		return renderGraph("")
+	}
+
+	if (defaultGraphSize === 0) {
+		return (
+			<PanelGroup
+				direction="column"
+				borderColor={BorderColor}
+				spacing={1}
+				onUpdate={handleInnerUpdate}
+			>
+				{graphs.map(renderGraph)}
+			</PanelGroup>
+		)
 	}
 
 	return (

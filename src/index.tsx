@@ -8,7 +8,7 @@ import { encode, BorderColor, PanelWidths, decode } from "./utils"
 export const Graph = GraphView
 
 interface DatasetProps {
-	context: {}
+	context?: {}
 	store: Store
 	focus?: string | null
 	onFocus?(focus: string): void

@@ -177,7 +177,7 @@ function makeEvents(
 
 const activeCtx = getInitialContext({ base: "" })
 
-async function getCtx(context: {}): Promise<{}> {
+async function getCtx(context?: {}): Promise<{}> {
 	return context === undefined
 		? processContext(activeCtx, localCtx, {})
 		: processContext(activeCtx, context, {})

@@ -3,7 +3,7 @@ import { Store } from "n3";
 import GraphView from "./graph";
 export declare const Graph: typeof GraphView;
 interface DatasetProps {
-    context: {};
+    context?: {};
     store: Store;
     focus?: string | null;
     onFocus?(focus: string): void;

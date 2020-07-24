@@ -1,13 +1,8 @@
-import {
-	FONT_SIZE,
-	FONT_FAMILY,
-	LINE_HEIGHT,
-	XSD,
-	RDF,
-	TAB,
-	CHAR,
-} from "./utils"
-import { Literal } from "n3"
+import { FONT_SIZE, FONT_FAMILY, LINE_HEIGHT, TAB, CHAR } from "./utils"
+
+import { TermT, LiteralT, IRIs } from "n3.ts"
+
+type Literal = TermT<LiteralT>
 
 const prefixFills: { [prefix: string]: string } = {
 	schema: "#990000",
@@ -18,12 +13,12 @@ const prefixFills: { [prefix: string]: string } = {
 }
 
 const valueClasses = {
-	[XSD.STRING]: "s",
-	[XSD.BOOLEAN]: "b",
-	[XSD.INTEGER]: "n",
-	[XSD.DOUBLE]: "n",
-	[XSD.DATE]: "d",
-	[XSD.DATETIME]: "d",
+	[IRIs.xsd.string]: "s",
+	[IRIs.xsd.boolean]: "b",
+	[IRIs.xsd.integer]: "n",
+	[IRIs.xsd.double]: "n",
+	[IRIs.xsd.date]: "d",
+	[IRIs.xsd.dateTime]: "d",
 }
 
 const STYLE = `<style>
@@ -93,19 +88,17 @@ function renderTerm(
 }
 
 function renderLiteral(
-	{ value, datatype: { id }, language }: Literal,
+	{ value, datatype: { value: type }, language }: Literal,
 	x: number,
 	y: number
 ) {
-	if (id && id[0] === "<" && id[id.length - 1] === ">") {
-		id = id.slice(1, -1)
-	}
-
-	if (id === RDF.LANG_STRING && false) {
-	} else if (valueClasses.hasOwnProperty(id)) {
+	if (type === IRIs.rdf.langString && false) {
+		// TODO: render language tagged strings
+	} else if (valueClasses.hasOwnProperty(type)) {
 		// Adjust for quotes (not rendered on non-string primitives)
-		const adjustedValue = id === XSD.STRING ? quote + value + quote : value
-		const adjustedX = id === XSD.STRING ? x : x + CHAR
+		const adjustedValue =
+			type === IRIs.xsd.string ? quote + value + quote : value
+		const adjustedX = type === IRIs.xsd.string ? x : x + CHAR
 		return `<text x="${adjustedX}" y="${y}" class="s">${adjustedValue}</text>`
 	} else {
 		return `<text x="${x}" y="${y}">${quote + value + quote}</text>`
@@ -127,16 +120,16 @@ export default function Node(
 	const compactRDFTypes = types.map((type) => compactStyle(type, compact, true))
 	const compactDataTypes = literalValues.map((value) =>
 		value.map((literal: Literal): [string, string] => {
-			if (literal.datatype.id === RDF.LANG_STRING) {
+			if (literal.datatype.value === IRIs.rdf.langString) {
 				return [literal.language, ""]
 			} else {
-				return compactStyle(literal.datatype.id, compact, true)
+				return compactStyle(literal.datatype.value, compact, true)
 			}
 		})
 	)
 
 	const name = id.startsWith("_:") ? null : compactStyle(id, compact, false)
-	const type = compactStyle(RDF.TYPE, compact, true)
+	const type = compactStyle(IRIs.rdf.type, compact, true)
 
 	const rdfTypes =
 		compactRDFTypes.length &&

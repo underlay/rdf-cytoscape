@@ -1,16 +1,16 @@
 import * as React from "react"
 import cytoscape from "cytoscape"
-import { Store, Quad, Term, Literal } from "n3"
 import { processContext } from "jsonld"
 import { compactIri } from "jsonld/lib/compact"
 import { getInitialContext } from "jsonld/lib/context"
+
+import { Store, Quad, Term, Literal, toId, IRIs } from "n3.ts"
 
 import localCtx from "./context.json"
 
 import Node from "./node"
 
 import {
-	RDF,
 	encode,
 	decode,
 	Style,
@@ -42,10 +42,11 @@ interface Node {
 }
 
 function createNode(
-	{ id }: Term,
+	term: Term,
 	nodes: Map<string, Node>,
 	elements: cytoscape.ElementDefinition[]
 ) {
+	const id = toId(term)
 	if (!nodes.has(id)) {
 		const node: Node = { literals: new Map(), types: [] }
 		if (elements !== null) {
@@ -54,7 +55,7 @@ function createNode(
 				group: "nodes",
 				data: { id: encode(id) },
 			}
-			if (id.startsWith("_:")) {
+			if (term.termType === "BlankNode") {
 				element.classes = "blankNode"
 			}
 			elements.push(element)
@@ -76,20 +77,23 @@ function makeElements(
 	for (const [index, quad] of quads.entries()) {
 		const {
 			subject,
-			predicate: { id: iri },
+			predicate: { value: iri },
 			object,
 		} = quad
 
+		const subjectId = toId(subject)
+		const objectId = toId(object)
+
 		createNode(subject, nodes, elements)
 		if (object.termType === "Literal") {
-			const { literals } = nodes.get(subject.id)
+			const { literals } = nodes.get(subjectId)
 			if (literals.has(iri)) {
 				literals.get(iri).push(object)
 			} else {
 				literals.set(iri, [object])
 			}
-		} else if (object.termType === "NamedNode" && iri === RDF.TYPE) {
-			nodes.get(subject.id).types.push(object.id)
+		} else if (object.termType === "NamedNode" && iri === IRIs.rdf.type) {
+			nodes.get(subjectId).types.push(objectId)
 		} else {
 			createNode(object, nodes, elements)
 			elements.push({
@@ -98,8 +102,8 @@ function makeElements(
 					id: encode(index.toString()),
 					iri,
 					name: compact(iri, true),
-					source: encode(subject.id),
-					target: encode(object.id),
+					source: encode(subjectId),
+					target: encode(objectId),
 				},
 			})
 		}
@@ -184,7 +188,7 @@ async function getCtx(context?: {}): Promise<{}> {
 }
 
 export default function (props: GraphProps) {
-	const { store, graph, focus, context, onMount, onDestroy } = props
+	const { store: store, graph, focus, context, onMount, onDestroy } = props
 	const [ctx, setCtx] = React.useState(null as {})
 	React.useEffect(() => {
 		getCtx(context)
@@ -229,8 +233,8 @@ export default function (props: GraphProps) {
 			const nextCy = cytoscape({
 				container,
 				style: Style,
-				minZoom: 0.1,
-				maxZoom: 4,
+				minZoom: 0.2,
+				maxZoom: 2,
 				zoom: 1,
 			})
 

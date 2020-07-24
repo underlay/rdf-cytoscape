@@ -1,26 +1,29 @@
 import * as React from "react"
-import { Store, DataFactory } from "n3"
-import PanelGroup, { PanelWidth } from "react-panelgroup"
 
-import GraphView from "./graph"
-import { encode, BorderColor, PanelWidths, decode } from "./utils"
+import PanelGroup, { PanelWidth } from "react-panelgroup"
+import { Store, Default, QuadT } from "n3.ts"
+
+import GraphView from "./graph.js"
+import { encode, BorderColor, PanelWidths, decode } from "./utils.js"
 
 export const Graph = GraphView
 
 interface DatasetProps {
+	dataset: Iterable<QuadT>
 	context?: {}
-	store: Store
 	focus?: string | null
 	onFocus?(focus: string): void
 }
 
-export function Dataset({ store, context, focus, onFocus }: DatasetProps) {
+export function Dataset({ dataset, context, focus, onFocus }: DatasetProps) {
 	const cys: React.MutableRefObject<Map<string, cytoscape.Core>> = React.useRef(
 		new Map()
 	)
 
+	const store = React.useMemo(() => new Store(Array.from(dataset)), [dataset])
+
 	const defaultGraphSize = React.useMemo(
-		() => store.countQuads(null, null, null, DataFactory.defaultGraph()),
+		() => store.countQuads(null, null, null, Default),
 		[store]
 	)
 

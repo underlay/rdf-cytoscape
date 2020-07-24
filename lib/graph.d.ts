@@ -1,6 +1,6 @@
 /// <reference types="react" />
 import cytoscape from "cytoscape";
-import { Store } from "n3";
+import { Store } from "n3.ts";
 interface GraphProps {
     store: Store;
     graph: string;

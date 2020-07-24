@@ -1,17 +1,5 @@
 import { LayoutOptions, Stylesheet } from "cytoscape";
 import { PanelWidth } from "react-panelgroup";
-export declare const XSD: {
-    STRING: string;
-    BOOLEAN: string;
-    INTEGER: string;
-    DOUBLE: string;
-    DATE: string;
-    DATETIME: string;
-};
-export declare const RDF: {
-    TYPE: string;
-    LANG_STRING: string;
-};
 export declare const FONT_SIZE = 12;
 export declare const TAB = 2;
 export declare const CHAR = 7.2;

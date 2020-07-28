@@ -68,8 +68,13 @@ function makeElements(
 	activeCtx: {},
 	quads: Quad[]
 ): cytoscape.ElementDefinition[] {
-	const compact = (iri: string, vocab: boolean) =>
-		compactIri({ activeCtx, iri, relativeTo: { vocab: !!vocab } })
+	const compact = (iri: string, vocab: boolean) => {
+		try {
+			return compactIri({ activeCtx, iri, relativeTo: { vocab: !!vocab } })
+		} catch (e) {
+			return iri
+		}
+	}
 
 	const elements: cytoscape.ElementDefinition[] = []
 	const nodes: Map<string, Node> = new Map()

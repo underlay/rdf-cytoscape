@@ -1,25 +1,22 @@
 {
 	"name": "rdf-cytoscape",
 	"description": "React component for rendering RDF graphs and datasets using cytoscape.js",
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"dependencies": {
 		"@types/cytoscape": "^3.14.7",
 		"@types/jsonld": "^1.5.1",
-		"@types/n3": "^1.4.3",
 		"@types/react": "^16.9.43",
 		"@types/react-panelgroup": "^1.0.1",
 		"cytoscape": "^3.15.2",
 		"jsonld": "^3.1.1",
-		"n3.ts": "0.0.3",
+		"n3.ts": "0.0.4",
 		"react": "^16.13.1",
 		"react-panelgroup": "^1.0.12"
 	},
 	"devDependencies": {
-		"n3": "^1.5.0",
-		"readable-stream": "^3.6.0",
 		"typescript": "^3.9.7"
 	},
 	"main": "lib/index.js",

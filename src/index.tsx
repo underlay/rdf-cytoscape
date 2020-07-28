@@ -20,7 +20,10 @@ export function Dataset({ dataset, context, focus, onFocus }: DatasetProps) {
 		new Map()
 	)
 
-	const store = React.useMemo(() => new Store(Array.from(dataset)), [dataset])
+	const store = React.useMemo(
+		() => (dataset instanceof Store ? dataset : new Store(dataset)),
+		[dataset]
+	)
 
 	const defaultGraphSize = React.useMemo(
 		() => store.countQuads(null, null, null, Default),

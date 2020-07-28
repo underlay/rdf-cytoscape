@@ -1,7 +1,7 @@
 {
 	"name": "rdf-cytoscape",
 	"description": "React component for rendering RDF graphs and datasets using cytoscape.js",
-	"version": "0.3.3",
+	"version": "0.3.4",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
@@ -12,7 +12,7 @@
 		"@types/react-panelgroup": "^1.0.1",
 		"cytoscape": "^3.15.2",
 		"jsonld": "^3.1.1",
-		"n3.ts": "0.0.4",
+		"n3.ts": "0.0.5",
 		"react": "^16.13.1",
 		"react-panelgroup": "^1.0.12"
 	},

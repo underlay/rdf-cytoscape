@@ -33,7 +33,7 @@ export function Dataset({ dataset, context, focus, onFocus }: DatasetProps) {
 	const graphs = React.useMemo(() => {
 		const graphs: string[] = []
 		for (const { termType, id } of store.getGraphs(null, null, null)) {
-			if (termType === "BlankNode") {
+			if (termType !== "DefaultGraph") {
 				graphs.push(id)
 			}
 		}

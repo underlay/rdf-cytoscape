@@ -1,7 +1,7 @@
 {
 	"name": "rdf-cytoscape",
 	"description": "React component for rendering RDF graphs and datasets using cytoscape.js",
-	"version": "0.3.2",
+	"version": "0.3.3",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},

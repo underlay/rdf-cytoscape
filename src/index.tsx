@@ -1,18 +1,21 @@
 import * as React from "react"
 
 import PanelGroup, { PanelWidth } from "react-panelgroup"
-import { Store, Default, QuadT } from "n3.ts"
+import { Store, DataFactory } from "n3"
+import type { Quad } from "rdf-js"
 
 import GraphView from "./graph.js"
 import { encode, BorderColor, PanelWidths, decode } from "./utils.js"
 
 export const Graph = GraphView
 
+const Default = DataFactory.defaultGraph()
+
 interface DatasetProps {
-	dataset: Iterable<QuadT>
+	dataset: Iterable<Quad>
 	context?: {}
 	focus?: string | null
-	onFocus?(focus: string): void
+	onFocus?(focus: string | null): void
 }
 
 export function Dataset({ dataset, context, focus, onFocus }: DatasetProps) {
@@ -20,8 +23,8 @@ export function Dataset({ dataset, context, focus, onFocus }: DatasetProps) {
 		new Map()
 	)
 
-	const store = React.useMemo(
-		() => (dataset instanceof Store ? dataset : new Store(dataset)),
+	const store = React.useMemo<Store>(
+		() => (dataset instanceof Store ? dataset : new Store(Array.from(dataset))),
 		[dataset]
 	)
 
@@ -41,17 +44,22 @@ export function Dataset({ dataset, context, focus, onFocus }: DatasetProps) {
 		return graphs
 	}, [store])
 
-	const focusRef = React.useRef(focus)
+	const focusRef = React.useRef<string | null>(
+		focus === undefined ? null : focus
+	)
 
 	React.useEffect(() => {
-		focusRef.current = focus
+		if (focus !== undefined) {
+			focusRef.current = focus
+		}
 	}, [focus])
 
 	const handleInnerUpdate = React.useCallback(
 		(_: PanelWidth) => {
 			for (const graph of graphs) {
-				if (cys.current.has(graph)) {
-					cys.current.get(graph).resize()
+				const cy = cys.current.get(graph)
+				if (cy !== undefined) {
+					cy.resize()
 				}
 			}
 		},
@@ -61,8 +69,9 @@ export function Dataset({ dataset, context, focus, onFocus }: DatasetProps) {
 	const handleOuterUpdate = React.useCallback(
 		(data: PanelWidth) => {
 			handleInnerUpdate(data)
-			if (cys.current.has("")) {
-				cys.current.get("").resize()
+			const cy = cys.current.get("")
+			if (cy !== undefined) {
+				cy.resize()
 			}
 		},
 		[handleInnerUpdate]
@@ -75,7 +84,10 @@ export function Dataset({ dataset, context, focus, onFocus }: DatasetProps) {
 			}
 
 			if (id === graph) {
-				cy.container().parentElement.classList.add("hover")
+				const container = cy.container()
+				if (container !== null && container.parentElement !== null) {
+					container.classList.add("hover")
+				}
 			}
 		}
 	}, [])
@@ -84,15 +96,19 @@ export function Dataset({ dataset, context, focus, onFocus }: DatasetProps) {
 		if (id === null) {
 			const forEach = (ele: cytoscape.SingularElementReturnValue) => {
 				const id = decode(ele.id())
-				if (cys.current.has(id)) {
-					cys.current
-						.get(id)
-						.container()
-						.parentElement.classList.remove("hover")
+				const cy = cys.current.get(id)
+				if (cy !== undefined) {
+					const container = cy.container()
+					if (container !== null && container.parentElement !== null) {
+						container.parentElement.classList.remove("hover")
+					}
 				}
 			}
 
-			cys.current.get(graph).$(".hover").forEach(forEach).removeClass("hover")
+			const cy = cys.current.get(graph)
+			if (cy !== undefined) {
+				cy.$(".hover").forEach(forEach).removeClass("hover")
+			}
 		} else {
 			for (const [graph, cy] of cys.current.entries()) {
 				if (id !== "") {
@@ -100,7 +116,10 @@ export function Dataset({ dataset, context, focus, onFocus }: DatasetProps) {
 				}
 
 				if (id === graph) {
-					cy.container().parentElement.classList.remove("hover")
+					const container = cy.container()
+					if (container !== null && container.parentElement !== null) {
+						container.parentElement.classList.remove("hover")
+					}
 				}
 			}
 		}
@@ -110,15 +129,21 @@ export function Dataset({ dataset, context, focus, onFocus }: DatasetProps) {
 		if (id !== focusRef.current) {
 			const f = encode(id)
 			for (const [graph, cy] of cys.current.entries()) {
+				const container = cy.container()
+
 				if (graph === id) {
-					cy.container().parentElement.classList.add("selected")
+					if (container !== null && container.parentElement !== null) {
+						container.parentElement.classList.add("selected")
+					}
 				} else if (id !== "") {
 					cy.$(`#${f}:unselected`).select()
 				}
 
 				if (focusRef.current !== null) {
 					if (graph === focusRef.current) {
-						cy.container().parentElement.classList.remove("selected")
+						if (container !== null && container.parentElement !== null) {
+							container.parentElement.classList.remove("selected")
+						}
 					} else if (id !== "") {
 						cy.$(`[id != "${f}"]:selected`).unselect()
 					}
@@ -137,7 +162,10 @@ export function Dataset({ dataset, context, focus, onFocus }: DatasetProps) {
 		if (id === focusRef.current) {
 			for (const [graph, cy] of cys.current.entries()) {
 				if (id === graph) {
-					cy.container().parentElement.classList.remove("selected")
+					const container = cy.container()
+					if (container !== null && container.parentElement !== null) {
+						container.parentElement.classList.remove("selected")
+					}
 				}
 				cy.$(`:selected`).unselect()
 			}
@@ -153,7 +181,7 @@ export function Dataset({ dataset, context, focus, onFocus }: DatasetProps) {
 	const renderGraph = (graph: string) => (
 		<GraphView
 			key={graph}
-			focus={focus}
+			focus={focusRef.current}
 			graph={graph}
 			store={store}
 			context={context}

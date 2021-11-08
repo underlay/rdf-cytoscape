@@ -4,11 +4,12 @@ import { processContext } from "jsonld"
 import { compactIri } from "jsonld/lib/compact"
 import { getInitialContext } from "jsonld/lib/context"
 
-import { Store, Quad, Term, Literal, toId, IRIs } from "n3.ts"
+import { Store, Quad, Term, Literal } from "n3"
 
-import localCtx from "./context.json"
+import { rdf } from "@underlay/namespaces"
+import { context as localCtx } from "./context.js"
 
-import Node from "./node"
+import Node from "./node.js"
 
 import {
 	encode,
@@ -25,7 +26,7 @@ import {
 interface GraphProps {
 	store: Store
 	graph: string
-	focus?: string
+	focus: string | null
 	context?: {}
 	onSelect?(focus: string): void
 	onUnselect?(focus: string): void
@@ -36,31 +37,31 @@ interface GraphProps {
 }
 
 interface Node {
-	index?: number
-	literals: Map<string, Literal[]>
+	index: number
+	literals: Record<string, Literal[]>
 	types: string[]
 }
 
 function createNode(
-	term: Term,
-	nodes: Map<string, Node>,
+	{ id, termType }: Term,
+	nodes: Record<string, Node>,
 	elements: cytoscape.ElementDefinition[]
 ) {
-	const id = toId(term)
-	if (!nodes.has(id)) {
-		const node: Node = { literals: new Map(), types: [] }
-		if (elements !== null) {
-			node.index = elements.length
-			const element: cytoscape.ElementDefinition = {
-				group: "nodes",
-				data: { id: encode(id) },
-			}
-			if (term.termType === "BlankNode") {
-				element.classes = "blankNode"
-			}
-			elements.push(element)
+	if (id in nodes) {
+		return
+	} else {
+		nodes[id] = { index: elements.length, literals: {}, types: [] }
+
+		const element: cytoscape.ElementDefinition = {
+			group: "nodes",
+			data: { id: encode(id) },
 		}
-		nodes.set(id, node)
+
+		if (termType === "BlankNode") {
+			element.classes = "blankNode"
+		}
+
+		elements.push(element)
 	}
 }
 
@@ -77,7 +78,7 @@ function makeElements(
 	}
 
 	const elements: cytoscape.ElementDefinition[] = []
-	const nodes: Map<string, Node> = new Map()
+	const nodes: Record<string, Node> = {}
 
 	for (const [index, quad] of quads.entries()) {
 		const {
@@ -86,19 +87,19 @@ function makeElements(
 			object,
 		} = quad
 
-		const subjectId = toId(subject)
-		const objectId = toId(object)
+		const subjectId = subject.id
+		const objectId = object.id
 
 		createNode(subject, nodes, elements)
 		if (object.termType === "Literal") {
-			const { literals } = nodes.get(subjectId)
-			if (literals.has(iri)) {
-				literals.get(iri).push(object)
+			const { literals } = nodes[subjectId]
+			if (iri in literals) {
+				literals[iri].push(object)
 			} else {
-				literals.set(iri, [object])
+				literals[iri] = [object]
 			}
-		} else if (object.termType === "NamedNode" && iri === IRIs.rdf.type) {
-			nodes.get(subjectId).types.push(objectId)
+		} else if (object.termType === "NamedNode" && iri === rdf.type) {
+			nodes[subjectId].types.push(objectId)
 		} else {
 			createNode(object, nodes, elements)
 			elements.push({
@@ -114,9 +115,10 @@ function makeElements(
 		}
 	}
 
-	for (const [id, { literals, types, index }] of nodes.entries()) {
+	for (const [id, { literals, types, index }] of Object.entries(nodes)) {
 		const { data } = elements[index]
-		if (id.startsWith("_:") && literals.size === 0 && types.length === 0) {
+		const { length } = Object.keys(literals)
+		if (id.startsWith("_:") && length === 0 && types.length === 0) {
 			data.width = 36
 			data.height = 36
 			data.empty = true
@@ -131,9 +133,10 @@ function makeElements(
 	return elements
 }
 
-const makeListener = (handler: (target: string) => void) => ({
-	target,
-}: cytoscape.EventObject) => handler(decode(target.id()))
+const makeListener =
+	(handler: (target: string) => void) =>
+	({ target }: cytoscape.EventObject) =>
+		handler(decode(target.id()))
 
 function attachListeners(
 	cy: cytoscape.Core,
@@ -146,7 +149,6 @@ function attachListeners(
 
 	if (typeof onMouseOut === "function") {
 		n.on("mouseout", makeListener(onMouseOut))
-		cy.on("mouseout", (_) => onMouseOut(null))
 	}
 
 	if (typeof onSelect === "function") {
@@ -164,15 +166,16 @@ function attachListeners(
 	}
 
 	if (focus === graph) {
-		cy.container().parentElement.classList.add("selected")
+		const container = cy.container()
+		if (container !== null && container.parentElement !== null) {
+			container.parentElement.classList.add("selected")
+		}
 	} else if (typeof focus === "string" && focus !== null && focus !== "") {
 		cy.$(`#${encode(focus)}`).select()
 	}
 }
 
-function makeEvents(
-	cy: cytoscape.Core
-): {
+function makeEvents(cy: cytoscape.Core): {
 	[name: string]: (_: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
 } {
 	return {
@@ -186,7 +189,9 @@ function makeEvents(
 
 const activeCtx = getInitialContext({ base: "" })
 
-async function getCtx(context?: {}): Promise<{}> {
+async function getCtx(
+	context?: Record<string, string>
+): Promise<Record<string, string>> {
 	return context === undefined
 		? processContext(activeCtx, localCtx, {})
 		: processContext(activeCtx, context, {})
@@ -194,24 +199,24 @@ async function getCtx(context?: {}): Promise<{}> {
 
 export default function (props: GraphProps) {
 	const { store: store, graph, focus, context, onMount, onDestroy } = props
-	const [ctx, setCtx] = React.useState(null as {})
+	const [ctx, setCtx] = React.useState<{} | null>(null)
 	React.useEffect(() => {
 		getCtx(context)
 			.then(setCtx)
 			.catch((err) => console.error(err))
 	}, [context])
 
-	const quads = React.useMemo(() => store.getQuads(null, null, null, graph), [
-		store,
-		graph,
-	])
+	const quads = React.useMemo(
+		() => store.getQuads(null, null, null, graph),
+		[store, graph]
+	)
 
 	const elements = React.useMemo(
 		() => (ctx === null ? null : makeElements(ctx, quads)),
 		[ctx, quads]
 	)
 
-	const [cy, setCy] = React.useState(null as cytoscape.Core)
+	const [cy, setCy] = React.useState<cytoscape.Core | null>(null)
 
 	React.useEffect(() => {
 		if (elements !== null && cy !== null) {

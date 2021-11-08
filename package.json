@@ -2,31 +2,37 @@
 	"name": "rdf-cytoscape",
 	"description": "React component for rendering RDF graphs and datasets using cytoscape.js",
 	"version": "0.3.5",
+	"type": "module",
+	"files": [
+		"lib"
+	],
+	"main": "lib/index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"dependencies": {
-		"@types/cytoscape": "^3.14.7",
-		"@types/jsonld": "^1.5.1",
-		"@types/react": "^16.9.43",
+		"@types/cytoscape": "^3.14.15",
+		"@types/jsonld": "^1.5.5",
+		"@types/n3": "^1.10.0",
+		"@types/rdf-js": "^4.0.2",
+		"@types/react": "^17.0.11",
 		"@types/react-panelgroup": "^1.0.1",
-		"cytoscape": "^3.15.2",
-		"jsonld": "^3.1.1",
-		"n3.ts": "0.0.5",
-		"react": "^16.13.1",
+		"@underlay/namespaces": "0.0.3",
+		"buffer": "^6.0.3",
+		"cytoscape": "^3.19.0",
+		"jsonld": "^5.2.0",
+		"n3": "^1.10.0",
+		"react": "^17.0.2",
 		"react-panelgroup": "^1.0.12"
 	},
 	"devDependencies": {
-		"typescript": "^3.9.7"
+		"typescript": "^4.3.2"
 	},
-	"main": "lib/index.js",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/underlay/rdf-cytoscape.git"
 	},
 	"keywords": [
-		"ipfs",
-		"ipld",
 		"rdf",
 		"json-ld"
 	],

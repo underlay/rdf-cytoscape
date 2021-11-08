@@ -1,8 +1,7 @@
 import { FONT_SIZE, FONT_FAMILY, LINE_HEIGHT, TAB, CHAR } from "./utils"
 
-import { TermT, LiteralT, IRIs } from "n3.ts"
-
-type Literal = TermT<LiteralT>
+import type { Literal } from "rdf-js"
+import { rdf, xsd } from "@underlay/namespaces"
 
 const prefixFills: { [prefix: string]: string } = {
 	schema: "#990000",
@@ -13,12 +12,12 @@ const prefixFills: { [prefix: string]: string } = {
 }
 
 const valueClasses = {
-	[IRIs.xsd.string]: "s",
-	[IRIs.xsd.boolean]: "b",
-	[IRIs.xsd.integer]: "n",
-	[IRIs.xsd.double]: "n",
-	[IRIs.xsd.date]: "d",
-	[IRIs.xsd.dateTime]: "d",
+	[xsd.string]: "s",
+	[xsd.boolean]: "b",
+	[xsd.integer]: "n",
+	[xsd.double]: "n",
+	[xsd.date]: "d",
+	[xsd.dateTime]: "d",
 }
 
 const STYLE = `<style>
@@ -92,13 +91,12 @@ function renderLiteral(
 	x: number,
 	y: number
 ) {
-	if (type === IRIs.rdf.langString && false) {
+	if (type === rdf.langString && false) {
 		// TODO: render language tagged strings
 	} else if (valueClasses.hasOwnProperty(type)) {
 		// Adjust for quotes (not rendered on non-string primitives)
-		const adjustedValue =
-			type === IRIs.xsd.string ? quote + value + quote : value
-		const adjustedX = type === IRIs.xsd.string ? x : x + CHAR
+		const adjustedValue = type === xsd.string ? quote + value + quote : value
+		const adjustedX = type === xsd.string ? x : x + CHAR
 		return `<text x="${adjustedX}" y="${y}" class="s">${adjustedValue}</text>`
 	} else {
 		return `<text x="${x}" y="${y}">${quote + value + quote}</text>`
@@ -111,16 +109,16 @@ const getLength = ([prefix, suffix]: [string, string]) =>
 export default function Node(
 	id: string,
 	types: string[],
-	literals: Map<string, Literal[]>,
+	literals: Record<string, Literal[]>,
 	compact: (term: string, vocab: boolean) => string
 ) {
-	const literalKeys = Array.from(literals.keys())
-	const literalValues = Array.from(literals.values())
+	const literalKeys = Object.keys(literals)
+	const literalValues = Object.values(literals)
 	const compactKeys = literalKeys.map((key) => compactStyle(key, compact, true))
 	const compactRDFTypes = types.map((type) => compactStyle(type, compact, true))
 	const compactDataTypes = literalValues.map((value) =>
 		value.map((literal: Literal): [string, string] => {
-			if (literal.datatype.value === IRIs.rdf.langString) {
+			if (literal.datatype.value === rdf.langString) {
 				return [literal.language, ""]
 			} else {
 				return compactStyle(literal.datatype.value, compact, true)
@@ -129,7 +127,7 @@ export default function Node(
 	)
 
 	const name = id.startsWith("_:") ? null : compactStyle(id, compact, false)
-	const type = compactStyle(IRIs.rdf.type, compact, true)
+	const type = compactStyle(rdf.type, compact, true)
 
 	const rdfTypes =
 		compactRDFTypes.length &&
@@ -177,7 +175,7 @@ export default function Node(
 	}
 	// let height = LINE_HEIGHT + 2
 
-	if (types.length > 0 || literals.size > 0) {
+	if (types.length > 0 || literalKeys.length > 0) {
 		let top = LINE_HEIGHT
 		if (name !== null) {
 			top += LINE_HEIGHT + 4
@@ -226,7 +224,7 @@ export default function Node(
 				)
 			}
 
-			const l = literals.get(literalKeys[i])
+			const l: Literal[] = literalValues[i]
 			for (let k = 0; k < l.length; k++) {
 				lines.push(
 					renderLiteral(

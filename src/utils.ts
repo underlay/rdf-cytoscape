@@ -1,5 +1,6 @@
 import { LayoutOptions, Stylesheet, Css } from "cytoscape"
 import { PanelWidth } from "react-panelgroup"
+import { Buffer } from "buffer"
 
 export const FONT_SIZE = 12
 export const TAB = 2
